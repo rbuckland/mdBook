@@ -5,6 +5,7 @@ pub use self::links::LinkPreprocessor;
 
 mod index;
 mod links;
+mod changelog;
 
 use book::Book;
 use config::Config;
