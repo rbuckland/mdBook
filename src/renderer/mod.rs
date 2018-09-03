@@ -12,8 +12,10 @@
 //! [RenderContext]: struct.RenderContext.html
 
 pub use self::html_handlebars::HtmlHandlebars;
+pub use self::pdf_renderer::PDFRenderer;
 
 mod html_handlebars;
+mod pdf_renderer;
 
 use serde_json;
 use shlex::Shlex;

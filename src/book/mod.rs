@@ -21,7 +21,7 @@ use toml::Value;
 
 use errors::*;
 use preprocess::{IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext};
-use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
+use renderer::{PDFRenderer, CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
 use utils;
 
 use config::Config;
@@ -324,13 +324,7 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
 
     if let Some(output_table) = config.get("output").and_then(|o| o.as_table()) {
         for (key, table) in output_table.iter() {
-            // the "html" backend has its own Renderer
-            if key == "html" {
-                renderers.push(Box::new(HtmlHandlebars::new()));
-            } else {
-                let renderer = interpret_custom_renderer(key, table);
-                renderers.push(renderer);
-            }
+            renderers.push(select_renderer(key, table));
         }
     }
 
@@ -340,6 +334,28 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
     }
 
     renderers
+}
+
+
+fn select_renderer(key: &str, table: &Value) -> Box<Renderer> {
+
+    match key { 
+        "html"  => Box::new(HtmlHandlebars::new()),
+        "pdf"   => Box::new(PDFRenderer::new()),
+        _       => {
+            
+            // look for the `command` field, falling back to using the key
+            // prepended by "mdbook-"
+            let table_dot_command = table
+                .get("command")
+                .and_then(|c| c.as_str())
+                .map(|s| s.to_string());
+
+            let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
+
+            Box::new(CmdRenderer::new(key.to_string(), command.to_string()))
+        }
+    }
 }
 
 fn default_preprocessors() -> Vec<Box<Preprocessor>> {
@@ -381,18 +397,6 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
     Ok(preprocessors)
 }
 
-fn interpret_custom_renderer(key: &str, table: &Value) -> Box<Renderer> {
-    // look for the `command` field, falling back to using the key
-    // prepended by "mdbook-"
-    let table_dot_command = table
-        .get("command")
-        .and_then(|c| c.as_str())
-        .map(|s| s.to_string());
-
-    let command = table_dot_command.unwrap_or_else(|| format!("mdbook-{}", key));
-
-    Box::new(CmdRenderer::new(key.to_string(), command.to_string()))
-}
 
 /// Check whether we should run a particular `Preprocessor` in combination
 /// with the renderer, falling back to `Preprocessor::supports_renderer()`
