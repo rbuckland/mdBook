@@ -16,5 +16,6 @@ shout-out to them!
 - [Phaiax](https://github.com/Phaiax)
 - Matt Ickstadt ([mattico](https://github.com/mattico))
 - Weihang Lo ([@weihanglo](https://github.com/weihanglo))
+- Ramon Buckland ([rbuckland](https://github.com/rbuckland))
 
 If you feel you're missing from this list, feel free to add yourself in a PR.

@@ -20,7 +20,9 @@ use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 
 use errors::*;
-use preprocess::{IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext};
+use preprocess::{
+    EmojiPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
+};
 use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
 use utils;
 
@@ -346,6 +348,7 @@ fn default_preprocessors() -> Vec<Box<Preprocessor>> {
     vec![
         Box::new(LinkPreprocessor::new()),
         Box::new(IndexPreprocessor::new()),
+        Box::new(EmojiPreprocessor::new()),
     ]
 }
 
@@ -374,6 +377,7 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
         match key.as_ref() {
             "links" => preprocessors.push(Box::new(LinkPreprocessor::new())),
             "index" => preprocessors.push(Box::new(IndexPreprocessor::new())),
+            "emoji" => preprocessors.push(Box::new(EmojiPreprocessor::new())),
             _ => bail!("{:?} is not a recognised preprocessor", key),
         }
     }
