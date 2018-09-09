@@ -10,7 +10,6 @@ the book. Possible use cases are:
 - Substituting in latex-style expressions (`$$ \frac{1}{3} $$`) with their
   mathjax equivalents
 
-
 ## Implementing a Preprocessor
 
 A preprocessor is represented by the `Preprocessor` trait.

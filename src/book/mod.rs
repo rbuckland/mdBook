@@ -20,7 +20,9 @@ use tempfile::Builder as TempFileBuilder;
 use toml::Value;
 
 use errors::*;
-use preprocess::{IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext};
+use preprocess::{
+    EmojiPreprocessor, IndexPreprocessor, LinkPreprocessor, Preprocessor, PreprocessorContext,
+};
 use renderer::{CmdRenderer, HtmlHandlebars, RenderContext, Renderer};
 use utils;
 
@@ -165,7 +167,7 @@ impl MDBook {
 
         for preprocessor in &self.preprocessors {
             if preprocessor_should_run(&**preprocessor, renderer, &self.config) {
-                debug!("Running the {} preprocessor.", preprocessor.name());
+                info!("Running the {} preprocessor.", preprocessor.name());
                 preprocessed_book =
                     preprocessor.run(&preprocess_ctx, preprocessed_book)?;
             }
@@ -342,16 +344,14 @@ fn determine_renderers(config: &Config) -> Vec<Box<Renderer>> {
     renderers
 }
 
-fn default_preprocessors() -> Vec<Box<Preprocessor>> {
-    vec![
-        Box::new(LinkPreprocessor::new()),
-        Box::new(IndexPreprocessor::new()),
-    ]
+
+fn default_preprocessors<'a>() -> Vec<&'a str> {
+    vec![LinkPreprocessor::NAME, IndexPreprocessor::NAME, EmojiPreprocessor::NAME]
 }
 
 fn is_default_preprocessor(pre: &Preprocessor) -> bool {
     let name = pre.name();
-    name == LinkPreprocessor::NAME || name == IndexPreprocessor::NAME
+    default_preprocessors().contains(&name)
 }
 
 /// Look at the `MDBook` and try to figure out what preprocessors to run.
@@ -360,20 +360,21 @@ fn determine_preprocessors(config: &Config) -> Result<Vec<Box<Preprocessor>>> {
         .and_then(|value| value.as_table())
         .map(|table| table.keys());
 
-    let preprocessor_keys = match preprocessor_keys {
-        Some(keys) => keys,
+    let preprocessor_keys: Vec<&str> = match preprocessor_keys {
+        Some(keys) => keys.map(|s|s.as_str()).collect(),
         // If no preprocessor field is set, default to the LinkPreprocessor and
-        // IndexPreprocessor. This allows you to disable default preprocessors
-        // by setting "preprocess" to an empty list.
-        None => return Ok(default_preprocessors()),
+        // IndexPreprocessor.
+        // Disabling the default requires an "empty table" [preprocessor]
+        None => default_preprocessors()
     };
 
     let mut preprocessors: Vec<Box<Preprocessor>> = Vec::new();
 
     for key in preprocessor_keys {
         match key.as_ref() {
-            "links" => preprocessors.push(Box::new(LinkPreprocessor::new())),
-            "index" => preprocessors.push(Box::new(IndexPreprocessor::new())),
+            LinkPreprocessor::NAME => preprocessors.push(Box::new(LinkPreprocessor::new())),
+            IndexPreprocessor::NAME => preprocessors.push(Box::new(IndexPreprocessor::new())),
+            EmojiPreprocessor::NAME => preprocessors.push(Box::new(EmojiPreprocessor::new())),
             _ => bail!("{:?} is not a recognised preprocessor", key),
         }
     }
@@ -472,9 +473,10 @@ mod tests {
         let got = determine_preprocessors(&cfg);
 
         assert!(got.is_ok());
-        assert_eq!(got.as_ref().unwrap().len(), 2);
+        assert_eq!(got.as_ref().unwrap().len(), 3);
         assert_eq!(got.as_ref().unwrap()[0].name(), "links");
         assert_eq!(got.as_ref().unwrap()[1].name(), "index");
+        assert_eq!(got.as_ref().unwrap()[2].name(), "emoji");
     }
 
     #[test]

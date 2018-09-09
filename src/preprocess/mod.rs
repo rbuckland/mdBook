@@ -1,8 +1,10 @@
 //! Book preprocessing.
 
+pub use self::emoji::EmojiPreprocessor;
 pub use self::index::IndexPreprocessor;
 pub use self::links::LinkPreprocessor;
 
+mod emoji;
 mod index;
 mod links;
 

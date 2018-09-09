@@ -3,6 +3,12 @@ title = "mdBook Documentation"
 description = "Create book from markdown files. Like Gitbook but implemented in Rust"
 authors = ["Mathieu David", "Michael-F-Bryan"]
 
+
+[preprocessor]
+emoji = true
+links = true
+index = true
+
 [output.html]
 mathjax-support = true
 

@@ -16,6 +16,7 @@
         - [Syntax highlighting](format/theme/syntax-highlighting.md)
         - [Editor](format/theme/editor.md)
     - [MathJax Support](format/mathjax.md)
+    - [Emoji Support](format/emojis.md)
     - [mdBook specific features](format/mdbook.md)
 - [Continuous Integration](continuous-integration.md)
 - [For Developers](for_developers/README.md)
